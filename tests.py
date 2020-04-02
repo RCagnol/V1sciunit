@@ -3,29 +3,41 @@ import capabilities as cap
 import scores 
 #===============================================================================
 
-class ExcitatoryAverageFiringRate(sciunit.Test):
-    """Test the if the sheets average firing rate is lesser than a predefined value"""
 
-    score_type = scores.LesserThanScore
-    """specifies the type of score returned by the test"""
+class Test(sciunit.Test):
+    """ Extension of sciunit.nest by adding the parameter sheet """
 
-    description = "Test if the sheets average firing rate is lesser than a predifined value"
-    """brief description of the test objective"""
 
     def __init__(self,
                  observation = None,
-		 sheets = None,
+                 sheet = None,
                  name = "Excitatory Average Firing Rate Test"):
-        if type(observation).__module__=="numpy":
-		observation=observation.item()
-	self.required_capabilities += (cap.SheetsFiringRate,)
-        self.sheets=sheets
+
+        self.sheet=sheet
         sciunit.Test.__init__(self, observation, name)
+
+
+class ExcitatoryAverageFiringRate(Test):
+    """Test the if the distribution of the sheet average firing rates is significatively lesser than a predefined value"""
+
+    score_type = scores.StudentsTestScore
+    """specifies the type of score returned by the test"""
+
+    description = "Test if the sheet average firing rate is lesser than a predifined value"
+
+    def __init__(self,
+                 observation = None,
+		 sheet = None,
+                 name = "Excitatory Average Firing Rate Test"):
+	
+	self.required_capabilities += (cap.StatsSheetFiringRate,)
+        Test.__init__(self,observation, sheet, name)
 
     #----------------------------------------------------------------------
 
     def validate_observation(self, observation):
-        try:
+        
+	try:
         	assert (isinstance(observation, int) or isinstance(observation, float))
         except Exception:
             raise sciunit.errors.ObservationError(
@@ -34,77 +46,169 @@ class ExcitatoryAverageFiringRate(sciunit.Test):
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction=model.sheets_firing_rate(self.sheets)
+        prediction=model.stats_sheet_firing_rate(self.sheet)
         if type(prediction).__module__=="numpy":
 		prediction=prediction.item()
         return prediction
 
     #----------------------------------------------------------------------
     def compute_score(self, observation, prediction):
-	score = scores.LesserThanScore.compute(observation, prediction)
-        return score
+	score = scores.StudentsTestScore.compute(observation, prediction)
+     	return score
 
 
 
-class InhibitoryAverageFiringRate(sciunit.Test):
-    """Test the if the sheets average firing rate is greater than a predefined value"""
+class InhibitoryAverageFiringRate(Test):
+    """Test the if the sheet average firing rates is significantly greater than the average firing rates 
+	of a predefined distribution"""
 
-    score_type = scores.GreaterThanScore
+    score_type = scores.StudentsTestScore
     """specifies the type of score returned by the test"""
 
-    description = "Test if the sheets average firing rate is greater than a predefined value"
-    """brief description of the test objective"""
+    description = "Test if the sheet average firing rate is greater than a predefined value"
 
     def __init__(self,
                  observation = None,
-		 sheets = None,
+		 sheet = None,
                  name = "Inhibitory Average Firing Rate Test"):
 
-	if type(observation).__module__=="numpy":
-        	observation=observation.item()
- 
-        self.required_capabilities += (cap.SheetsFiringRate,)
-        self.sheets=sheets
-        sciunit.Test.__init__(self, observation, name)
+        self.required_capabilities += (cap.StatsSheetFiringRate,)
+        Test.__init__(self, observation, sheet, name)
 
     #----------------------------------------------------------------------
 
     def validate_observation(self, observation):
-        try:
-        	assert (isinstance(observation, int) or isinstance(observation, float))
+	try:
+            assert len(observation.keys()) == 3
+            for key, val in observation.items():
+                assert key in ["mean", "std","n"]
+                if key =="n":
+                        assert (isinstance(val, int))
+                else:
+                        assert (isinstance(val, int) or isinstance(val, float))
         except Exception:
             raise sciunit.errors.ObservationError(
-                ("Observation must return a float or an integer"))
-
+                ("Observation must return a dictionary of the form:"
+                 "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction=model.sheets_firing_rate(self.sheets)
+        prediction=model.stats_sheet_firing_rate(self.sheet)
 	if type(prediction).__module__=="numpy":
         	prediction=prediction.item()
         return prediction
 
     #----------------------------------------------------------------------
     def compute_score(self, observation, prediction):
-        score = scores.GreaterThanScore.compute(observation, prediction)
+        score = scores.StudentsTestScore.compute(observation, prediction)
 	return score
 
-class RestingPotential(sciunit.Test):
+
+class DistributionAverageFiringRate(Test):
+    """Test the if the sheet average firing rates distributions is significatively different 
+    than a specific distribution"""
+
+    score_type = scores.ShapiroTestScore
+    """specifies the type of score returned by the test"""
+
+    description = """Test if the sheet average firing rates distributions is significatively different 
+    than a specific distribution""" 
+
+    def __init__(self,
+                 observation = None,
+                 sheet = None,
+                 name = "Distribution Average Firing Rate Test"):
+
+        self.required_capabilities += (cap.SheetFiringRate,)
+        Test.__init__(self, observation, sheet, name)
+
+    #----------------------------------------------------------------------
+
+    def validate_observation(self, observation):
+        try:
+            assert isinstance(observation, str)
+        except Exception:
+            raise sciunit.errors.ObservationError(
+                ("Observation should be a string containing the name of the distribution the average firing rates should be compared to, either: 'normal' or 'lognormal'"))
+    #----------------------------------------------------------------------
+
+    def generate_prediction(self, model):
+        prediction=model.sheet_firing_rate(self.sheet)
+        return prediction
+
+    #----------------------------------------------------------------------
+    def compute_score(self, observation, prediction):
+        score = scores.ShapiroTestScore.compute(observation, prediction)
+        return score
+
+
+class CorrelationCoefficient(Test):
+    """Test the if the sheet distribution correlation coefficient is significatively greater than a predefined distribution"""
+
+    score_type = scores.StudentsTestScore
+    """specifies the type of score returned by the test"""
+
+    description = "Test if the sheet correlation coefficient is greater than a predefined value"
+
+    def __init__(self,
+                 observation = None,
+                 sheet = None,
+                 name = "Correlation Coefficient Test"):
+
+        if type(observation).__module__=="numpy":
+                observation=observation.item()
+
+        self.required_capabilities += (cap.SheetCorrelationCoefficient,)
+        Test.__init__(self, observation, sheet, name)
+
+    #----------------------------------------------------------------------
+
+    def validate_observation(self, observation):
+        try:
+            assert len(observation.keys()) == 3 
+            for key, val in observation.items():
+		assert key in ["mean", "std","n"]
+		if key =="n":
+                	assert (isinstance(val, int))
+		else:
+                	assert (isinstance(val, int) or isinstance(val, float))
+        except Exception:
+            raise sciunit.errors.ObservationError(
+                ("Observation must return a dictionary of the form:"
+                 "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+    #----------------------------------------------------------------------
+
+    def generate_prediction(self, model):
+        prediction=model.sheet_correlation_coefficient(self.sheet)
+        if type(prediction).__module__=="numpy":
+                prediction=prediction.item()
+        return prediction
+
+    #----------------------------------------------------------------------
+    def compute_score(self, observation, prediction):
+        score = scores.StudentsTestScore.compute(observation, prediction)
+        return score
+
+
+
+
+
+
+class RestingPotential(Test):
     """Test the sheets' average resting membrane potential"""
 
-    score_type = sciunit.scores.CohenDScore
+    #score_type = sciunit.scores.CohenDScore
+    score_type = scores.StudentsTestScore
     """specifies the type of score returned by the test"""
 
     description = ("Test the sheets' average resting membrane potential")
-    """brief description of the test objective"""
 
     def __init__(self,
                  observation,
-		 sheets, 
+		 sheet, 
                  name ="Sheets Resting Membrane Potential Test"):
         self.required_capabilities += (cap.SheetsMembranePotential,)
-        self.sheets=sheets
-	sciunit.Test.__init__(self, observation, name)
+	Test.__init__(self, observation, sheet, name)
 
     #----------------------------------------------------------------------
 
@@ -125,31 +229,30 @@ class RestingPotential(sciunit.Test):
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction = model.sheets_membrane_potential(self.sheets)
+        prediction = model.sheets_membrane_potential(self.sheet)
         return prediction
 
     #----------------------------------------------------------------------
 
     def compute_score(self, observation, prediction):
-	score = sciunit.scores.CohenDScore.compute(observation, prediction)
+        observation["std"] = observation["std"]*(float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance	
+	score = scores.StudentsTestScore.compute(observation, prediction)
         return score
 
-class ExcitatorySynapticConductance(sciunit.Test):
+class ExcitatorySynapticConductance(Test):
     """Test the sheets' average excitatory synaptic conductance"""
 
-    score_type = sciunit.scores.CohenDScore
+    score_type = scores.StudentsTestScore 
     """specifies the type of score returned by the test"""
 
     description = ("Test the sheets' average excitatory synaptic conductance")
-    """brief description of the test objective"""
 
     def __init__(self,
                  observation,
-                 sheets,
+                 sheet,
                  name ="Sheets Excitatory Synaptic Conductance Test"):
         self.required_capabilities += (cap.SheetsExcitatorySynapticConductance,)
-        self.sheets=sheets
-        sciunit.Test.__init__(self, observation, name)
+        Test.__init__(self, observation, sheet, name)
 
     #----------------------------------------------------------------------
 
@@ -170,31 +273,30 @@ class ExcitatorySynapticConductance(sciunit.Test):
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction = model.sheets_excitatory_synaptic_conductance(self.sheets)
+        prediction = model.sheets_excitatory_synaptic_conductance(self.sheet)
         return prediction
 
     #----------------------------------------------------------------------
 
     def compute_score(self, observation, prediction):
-        score = sciunit.scores.CohenDScore.compute(observation, prediction)
+        observation["std"] = observation["std"]*(float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance
+	score = scores.StudentsTestScore.compute(observation, prediction)
         return score
 
-class InhibitorySynapticConductance(sciunit.Test):
-    """Test the sheets' average inhibitory synaptic conductance"""
+class InhibitorySynapticConductance(Test):
+    """Test the sheet' average inhibitory synaptic conductance"""
 
-    score_type = sciunit.scores.CohenDScore
+    score_type = scores.StudentsTestScore
     """specifies the type of score returned by the test"""
 
-    description = ("Test the sheets' average inhibitory synaptic conductance")
-    """brief description of the test objective"""
+    description = ("Test the sheet' average inhibitory synaptic conductance")
 
     def __init__(self,
                  observation,
-                 sheets,
+                 sheet,
                  name ="Sheets Inhibitory Synaptic Conductance Test"):
         self.required_capabilities += (cap.SheetsInhibitorySynapticConductance,)
-        self.sheets=sheets
-        sciunit.Test.__init__(self, observation, name)
+        Test.__init__(self, observation, sheet, name)
 
     #----------------------------------------------------------------------
 
@@ -215,12 +317,13 @@ class InhibitorySynapticConductance(sciunit.Test):
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction = model.sheets_inhibitory_synaptic_conductance(self.sheets)
+        prediction = model.sheets_inhibitory_synaptic_conductance(self.sheet)
         return prediction
 
     #----------------------------------------------------------------------
 
     def compute_score(self, observation, prediction):
-        score = sciunit.scores.CohenDScore.compute(observation, prediction)
+        observation["std"] = observation["std"]*(float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance
+        score = scores.StudentsTestScore.compute(observation, prediction)
         return score
 
