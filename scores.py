@@ -20,7 +20,7 @@ class StudentsTestScore(Score):
        	p_n = prediction['n']
         p_var= p_std**2
 	
-	#2 sample t-test
+	#2 samples t-test
 	if isinstance(observation, dict):
 		o_mean = observation['mean']
         	o_std = observation['std']
