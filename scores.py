@@ -2,26 +2,6 @@ from sciunit.scores.complete import *
 import scipy.stats as st
 import numpy
 
-class GreaterThanScore(BooleanScore):
-    """A boolean score, which must be True or False."""
-
-    _description = ('True if the prediction is greater than a value passed in input; False otherwise')
-    @classmethod
-    def compute(self,value, prediction):
-        """Compute whether the observation is greater than a value passed in input."""
-        return GreaterThanScore(prediction > value)
-
-
-class LesserThanScore(BooleanScore):
-    """A boolean score, which must be True or False."""
-
-
-    _description = ('True if the prediction is lesser than a value passed in input; False otherwise')
-    @classmethod
-    def compute(self, value, prediction):
-        """Compute whether the prediction is lesser than a value passed in input."""
-        return LesserThanScore(value > prediction)
-
 class StudentsTestScore(Score):
     """A Student's t-test score.
 
@@ -61,7 +41,7 @@ class StudentsTestScore(Score):
 	return StudentsTestScore(value,related_data={"p_value": p_val})
 	
     def __str__(self):
-	if self.test:
+	if self.test.sheet:
 		return 't = %.2f, p=%.6f for sheet(s) %s' % (self.score, self.related_data["p_value"], self.test.sheet)
         else:
 	        return 't = %.2f, p=%.6f' % (self.score, self.related_data["p_value"])
@@ -91,7 +71,7 @@ class ShapiroTestScore(Score):
         return ShapiroTestScore(value,related_data={"p_value": p_val})
 
     def __str__(self):
-        if self.test:
+        if self.test.sheet:
 		return 'W = %.2f, p=%.6f for sheet %s' % (self.score, self.related_data["p_value"],self.test.sheet)
 	else:
 		return 'W = %.2f, p=%.6f' % (self.score, self.related_data["p_value"])
