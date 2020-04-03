@@ -5,7 +5,7 @@ import numpy
 class StudentsTestScore(Score):
     """A Student's t-test score.
 
-    A float indicating the difference between two means normalized by the pooled standard population and the two sample sizes
+    A float indicating the difference between two means normalized by the two standard deviations and the two sample sizes
     Contains also the p value, which evaluates the significativity of this difference
     """
 
