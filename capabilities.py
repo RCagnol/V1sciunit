@@ -12,12 +12,12 @@ class SheetFiringRate(sciunit.Capability):
         raise NotImplementedError()
 
 
-class StatsSheetFiringRate(SheetFiringRate):
-    """ Get descriptibe statistics about the distribution of the average firing rates of the sheet """
+class StatsSheetsFiringRate(SheetFiringRate):
+    """ Get descriptibe statistics about the distribution of the average firing rates of the sheets """
 
-    def stats_sheet_firing_rate(self, sheet):
+    def stats_sheets_firing_rate(self, sheets):
         """Model should implement this method such as to retrieve descriptive statistics about the distribution of 
-	the average firing rates of its sheet of neurons passed in input 
+	the average firing rates of its sheets of neurons passed in input 
 	   sheet should be a string specifying the name of the sheet
 	"""
 	raise NotImplementedError()
@@ -33,7 +33,7 @@ class SheetsMembranePotential(sciunit.Capability):
         raise NotImplementedError()
 
 class SheetsExcitatorySynapticConductance(sciunit.Capability):
-    """Get the average excitatory synaptic conductance of the sheet"""
+    """Get the average excitatory synaptic conductance of the sheets"""
 
     def sheets_excitatory_synaptic_conductance(self, sheets):
         """Model should implement this method such as to retrieve the excitatory synaptic conductance 
@@ -52,12 +52,47 @@ class SheetsInhibitorySynapticConductance(sciunit.Capability):
         """
         raise NotImplementedError()
 
-class SheetCorrelationCoefficient(sciunit.Capability):
-    """Get the correlation coefficient between the PSTH of all pair of neurons of the sheet"""
 
-    def sheet_correlation_coefficient(self, sheets):
+class SheetsCVISI(sciunit.Capability):
+    """Get the mean coefficient of variation of the inter-spike-interval of all neurons of the sheets"""
+
+    def sheets_cv_isi(self, sheets):
+        """ Model should implement this method such as to retrieve the coefficient of variation of the inter-spike-interval 
+            of its sheets of neurons passed in input
+            sheets should be a string specifying the name of the sheet
+        """
+
+
+class SheetsCorrelationCoefficient(sciunit.Capability):
+    """Get the correlation coefficient between the PSTH of all pair of neurons of the sheets"""
+
+    def sheets_correlation_coefficient(self, sheets):
 	""" Model should implement this method such as to retrieve the correlation coefficient
 	    of its sheets of neurons passed in input
-	    sheet should be a string specifying the name of the sheet
+	    sheets should be a string specifying the name of the sheet
 	"""
 	raise NotImplementedError()
+
+
+class SheetsHWHH(sciunit.Capability):
+    """Get the mean and standard error of Half-Width at Half-Height of all neurons of the sheets"""
+
+    def sheets_hwhh(self, sheets, contrast):
+        """ Model should implement this method such as to retrieve the Half-Width at Half-Height 
+            of its sheets of neurons passed in input
+            sheets should be a string specifying the name of the sheet
+	    contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
+        """
+        raise NotImplementedError()
+
+class SheetsRURA(sciunit.Capability):
+    """Get the mean and standard error of Half-Width at Half-Height of all neurons of the sheets"""
+
+    def sheets_rura(self, sheets, contrast):
+        """ Model should implement this method such as to retrieve the Half-Width at Half-Height
+            of its sheets of neurons passed in input
+            sheets should be a string specifying the name of the sheet
+            contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
+        """
+        raise NotImplementedError()
+

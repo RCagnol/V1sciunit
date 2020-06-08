@@ -5,48 +5,55 @@ import scores
 
 
 class Test(sciunit.Test):
-    """ Extension of sciunit.nest by adding the parameter sheet """
+    """ Extension of sciunit.nest by adding the parameter sheets """
 
 
     def __init__(self,
                  observation = None,
-                 sheet = None,
+                 sheets = None,
                  name = "Excitatory Average Firing Rate Test"):
 
-        self.sheet=sheet
+        self.sheets=sheets
         sciunit.Test.__init__(self, observation, name)
 
 
 class ExcitatoryAverageFiringRate(Test):
-    """Test the if the distribution of the sheet average firing rates is significatively lesser than a predefined value"""
+    """Test the if the distribution of the sheets average firing rates is significatively lesser than a predefined value"""
 
     score_type = scores.StudentsTestScore
     """specifies the type of score returned by the test"""
 
-    description = "Test if the sheet average firing rate is lesser than a predifined value"
+    description = "Test if the sheets average firing rate is lesser than a predifined value"
 
     def __init__(self,
                  observation = None,
-		 sheet = None,
+		 sheets = None,
                  name = "Excitatory Average Firing Rate Test"):
 	
-	self.required_capabilities += (cap.StatsSheetFiringRate,)
-        Test.__init__(self,observation, sheet, name)
+	self.required_capabilities += (cap.StatsSheetsFiringRate,)
+        Test.__init__(self,observation, sheets, name)
 
     #----------------------------------------------------------------------
 
     def validate_observation(self, observation):
-        
-	try:
-        	assert (isinstance(observation, int) or isinstance(observation, float))
-        except Exception:
-            raise sciunit.errors.ObservationError(
-                ("Observation must return a float or an integer"))
-        	
+        if not (isinstance(observation, int) or isinstance(observation, float)):
+            try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
+                        assert (isinstance(val, int))
+                    else:
+                        assert (isinstance(val, int) or isinstance(val, float))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+	
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction=model.stats_sheet_firing_rate(self.sheet)
+        prediction=model.stats_sheets_firing_rate(self.sheets)
         if type(prediction).__module__=="numpy":
 		prediction=prediction.item()
         return prediction
@@ -59,41 +66,42 @@ class ExcitatoryAverageFiringRate(Test):
 
 
 class InhibitoryAverageFiringRate(Test):
-    """Test the if the sheet average firing rates is significantly greater than the average firing rates 
+    """Test the if the sheets average firing rates is significantly greater than the average firing rates 
 	of a predefined distribution"""
 
     score_type = scores.StudentsTestScore
     """specifies the type of score returned by the test"""
 
-    description = "Test if the sheet average firing rate is greater than a predefined value"
+    description = "Test if the sheets average firing rate is greater than a predefined value"
 
     def __init__(self,
                  observation = None,
-		 sheet = None,
+		 sheets = None,
                  name = "Inhibitory Average Firing Rate Test"):
 
-        self.required_capabilities += (cap.StatsSheetFiringRate,)
-        Test.__init__(self, observation, sheet, name)
+        self.required_capabilities += (cap.StatsSheetsFiringRate,)
+        Test.__init__(self, observation, sheets, name)
 
     #----------------------------------------------------------------------
 
     def validate_observation(self, observation):
-	try:
-            assert len(observation.keys()) == 3
-            for key, val in observation.items():
-                assert key in ["mean", "std","n"]
-                if key =="n":
+        if not (isinstance(observation, int) or isinstance(observation, float)):
+            try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
                         assert (isinstance(val, int))
-                else:
+                    else:
                         assert (isinstance(val, int) or isinstance(val, float))
-        except Exception:
-            raise sciunit.errors.ObservationError(
-                ("Observation must return a dictionary of the form:"
-                 "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction=model.stats_sheet_firing_rate(self.sheet)
+        prediction=model.stats_sheets_firing_rate(self.sheets)
 	if type(prediction).__module__=="numpy":
         	prediction=prediction.item()
         return prediction
@@ -116,11 +124,11 @@ class DistributionAverageFiringRate(Test):
 
     def __init__(self,
                  observation = None,
-                 sheet = None,
+                 sheets = None,
                  name = "Distribution Average Firing Rate Test"):
 
         self.required_capabilities += (cap.SheetFiringRate,)
-        Test.__init__(self, observation, sheet, name)
+        Test.__init__(self, observation, sheets, name)
 
     #----------------------------------------------------------------------
 
@@ -133,7 +141,7 @@ class DistributionAverageFiringRate(Test):
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction=model.sheet_firing_rate(self.sheet)
+        prediction=model.sheet_firing_rate(self.sheets)
         return prediction
 
     #----------------------------------------------------------------------
@@ -142,44 +150,95 @@ class DistributionAverageFiringRate(Test):
         return score
 
 
-class CorrelationCoefficient(Test):
-    """Test the if the sheet distribution correlation coefficient is significatively greater than a predefined distribution"""
+class CoefficientVariationISI(Test):
+    """Test the if the sheets distribution of the coefficient of variation of the Inter-Spike-Interval is significatively greater than a predefined value or distribution"""
 
     score_type = scores.StudentsTestScore
     """specifies the type of score returned by the test"""
 
-    description = "Test if the sheet correlation coefficient is greater than a predefined value"
+    description = "Test if the sheets coefficient of variation of the Inter-Spike-Interval is significatively greater than a predefined value"
 
     def __init__(self,
                  observation = None,
-                 sheet = None,
+                 sheets = None,
+                 name = "Coefficient of Variation of Inter-Spike-Interval Test"):
+
+        if type(observation).__module__=="numpy":
+                observation=observation.item()
+
+        self.required_capabilities += (cap.SheetsCVISI,)
+        Test.__init__(self, observation, sheets, name)
+
+    #----------------------------------------------------------------------
+
+    def validate_observation(self, observation):
+        if not (isinstance(observation, int) or isinstance(observation, float)): 
+	    try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
+                        assert (isinstance(val, int))
+                    else:
+                        assert (isinstance(val, int) or isinstance(val, float))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+    #----------------------------------------------------------------------
+
+    def generate_prediction(self, model):
+        prediction=model.sheets_cv_isi(self.sheets)
+        if type(prediction).__module__=="numpy":
+                prediction=prediction.item()
+        return prediction
+
+    #----------------------------------------------------------------------
+    def compute_score(self, observation, prediction):
+        score = scores.StudentsTestScore.compute(observation, prediction)
+	score.description="If p<0.05 and t>0, then the test is passed"
+        return score
+
+
+class CorrelationCoefficient(Test):
+    """Test the if the sheets distribution correlation coefficient is significatively greater than a predefined distribution"""
+
+    score_type = scores.StudentsTestScore
+    """specifies the type of score returned by the test"""
+
+    description = "Test if the sheets correlation coefficient is greater than a predefined value"
+
+    def __init__(self,
+                 observation = None,
+                 sheets = None,
                  name = "Correlation Coefficient Test"):
 
         if type(observation).__module__=="numpy":
                 observation=observation.item()
 
-        self.required_capabilities += (cap.SheetCorrelationCoefficient,)
-        Test.__init__(self, observation, sheet, name)
+        self.required_capabilities += (cap.SheetsCorrelationCoefficient,)
+        Test.__init__(self, observation, sheets, name)
 
     #----------------------------------------------------------------------
 
     def validate_observation(self, observation):
-        try:
-            assert len(observation.keys()) == 3 
-            for key, val in observation.items():
-		assert key in ["mean", "std","n"]
-		if key =="n":
-                	assert (isinstance(val, int))
-		else:
-                	assert (isinstance(val, int) or isinstance(val, float))
-        except Exception:
-            raise sciunit.errors.ObservationError(
-                ("Observation must return a dictionary of the form:"
-                 "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+        if not (isinstance(observation, int) or isinstance(observation, float)):
+            try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
+                        assert (isinstance(val, int))
+                    else:
+                        assert (isinstance(val, int) or isinstance(val, float))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction=model.sheet_correlation_coefficient(self.sheet)
+        prediction=model.sheets_correlation_coefficient(self.sheets)
         if type(prediction).__module__=="numpy":
                 prediction=prediction.item()
         return prediction
@@ -205,31 +264,31 @@ class RestingPotential(Test):
 
     def __init__(self,
                  observation,
-		 sheet, 
+		 sheets, 
                  name ="Sheets Resting Membrane Potential Test"):
         self.required_capabilities += (cap.SheetsMembranePotential,)
-	Test.__init__(self, observation, sheet, name)
+	Test.__init__(self, observation, sheets, name)
 
     #----------------------------------------------------------------------
 
     def validate_observation(self, observation):
-        try:
-            assert len(observation.keys()) == 3 
-            for key, val in observation.items():
-		assert key in ["mean", "std","n"]
-		if key =="n":
-                	assert (isinstance(val, int))
-		else:
-                	assert (isinstance(val, int) or isinstance(val, float))
-        except Exception:
-            raise sciunit.errors.ObservationError(
-                ("Observation must return a dictionary of the form:"
-                 "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
-
+        if not (isinstance(observation, int) or isinstance(observation, float)):
+            try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
+                        assert (isinstance(val, int))
+                    else:
+                        assert (isinstance(val, int) or isinstance(val, float))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction = model.sheets_membrane_potential(self.sheet)
+        prediction = model.sheets_membrane_potential(self.sheets)
         return prediction
 
     #----------------------------------------------------------------------
@@ -238,6 +297,8 @@ class RestingPotential(Test):
         observation["std"] = observation["std"]*(float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance	
 	score = scores.StudentsTestScore.compute(observation, prediction)
         return score
+
+
 
 class ExcitatorySynapticConductance(Test):
     """Test the sheets' average excitatory synaptic conductance"""
@@ -249,31 +310,32 @@ class ExcitatorySynapticConductance(Test):
 
     def __init__(self,
                  observation,
-                 sheet,
+                 sheets,
                  name ="Sheets Excitatory Synaptic Conductance Test"):
         self.required_capabilities += (cap.SheetsExcitatorySynapticConductance,)
-        Test.__init__(self, observation, sheet, name)
+        Test.__init__(self, observation, sheets, name)
 
     #----------------------------------------------------------------------
 
     def validate_observation(self, observation):
-        try:
-            assert len(observation.keys()) == 3
-            for key, val in observation.items():
-                assert key in ["mean", "std","n"]
-                if key =="n":
+        if not (isinstance(observation, int) or isinstance(observation, float)):
+            try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
                         assert (isinstance(val, int))
-                else:
+                    else:
                         assert (isinstance(val, int) or isinstance(val, float))
-        except Exception:
-            raise sciunit.errors.ObservationError(
-                ("Observation must return a dictionary of the form:"
-                 "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
 
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction = model.sheets_excitatory_synaptic_conductance(self.sheet)
+        prediction = model.sheets_excitatory_synaptic_conductance(self.sheets)
         return prediction
 
     #----------------------------------------------------------------------
@@ -284,40 +346,151 @@ class ExcitatorySynapticConductance(Test):
         return score
 
 class InhibitorySynapticConductance(Test):
-    """Test the sheet' average inhibitory synaptic conductance"""
+    """Test the sheets' average inhibitory synaptic conductance"""
 
     score_type = scores.StudentsTestScore
     """specifies the type of score returned by the test"""
 
-    description = ("Test the sheet' average inhibitory synaptic conductance")
+    description = ("Test the sheets' average inhibitory synaptic conductance")
 
     def __init__(self,
                  observation,
-                 sheet,
+                 sheets,
                  name ="Sheets Inhibitory Synaptic Conductance Test"):
         self.required_capabilities += (cap.SheetsInhibitorySynapticConductance,)
-        Test.__init__(self, observation, sheet, name)
+        Test.__init__(self, observation, sheets, name)
 
     #----------------------------------------------------------------------
 
     def validate_observation(self, observation):
-        try:
-            assert len(observation.keys()) == 3
-            for key, val in observation.items():
-                assert key in ["mean", "std","n"]
-                if key =="n":
+        if not (isinstance(observation, int) or isinstance(observation, float)):
+            try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
                         assert (isinstance(val, int))
-                else:
+                    else:
                         assert (isinstance(val, int) or isinstance(val, float))
-        except Exception:
-            raise sciunit.errors.ObservationError(
-                ("Observation must return a dictionary of the form:"
-                 "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
 
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction = model.sheets_inhibitory_synaptic_conductance(self.sheet)
+        prediction = model.sheets_inhibitory_synaptic_conductance(self.sheets)
+        return prediction
+
+    #----------------------------------------------------------------------
+
+    def compute_score(self, observation, prediction):
+        observation["std"] = observation["std"]*(float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance
+        score = scores.StudentsTestScore.compute(observation, prediction)
+        return score
+
+
+
+
+class SinusoidalGratingsTest(Test):
+    """ Extension of Test by adding the parameter contrast """
+
+
+    def __init__(self,
+                 observation = None,
+                 sheets = None,
+                 contrast = 100, 
+		 name = "Test"):
+
+        self.sheets=sheets
+	self.contrast=contrast
+        Test.__init__(self, observation, sheets, name)
+
+class HWHH(SinusoidalGratingsTest):
+    """Test if the sheets' tuning curves Half-Width at Half-Height are significantly different than a predifine distribution"""
+
+    score_type = scores.StudentsTestScore
+    """specifies the type of score returned by the test"""
+
+    description = ("Test the sheets' if the sheets' tuning curves Half-Width at Half-Height are significantly different than a predifined distribution")
+
+    def __init__(self,
+                 observation,
+                 sheets,
+		 contrast,
+                 name ="Half-Width at Half-Height Test"):
+        self.required_capabilities += (cap.SheetsHWHH,)
+        SinusoidalGratingsTest.__init__(self, observation, sheets, contrast, name)
+
+    #----------------------------------------------------------------------
+
+    def validate_observation(self, observation):
+        if not (isinstance(observation, int) or isinstance(observation, float)):
+            try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
+                        assert (isinstance(val, int))
+                    else:
+                        assert (isinstance(val, int) or isinstance(val, float))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+
+    #----------------------------------------------------------------------
+
+    def generate_prediction(self, model):
+        prediction = model.sheets_hwhh(self.sheets, self.contrast)
+        return prediction
+
+    #----------------------------------------------------------------------
+
+    def compute_score(self, observation, prediction):
+        observation["std"] = observation["std"]*(float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance
+        score = scores.StudentsTestScore.compute(observation, prediction)
+        return score
+
+
+class RURA(SinusoidalGratingsTest):
+    """Test if the sheets' Relative Unselective Response Amplitude are significantly different than a predifined distribution"""
+
+    score_type = scores.StudentsTestScore
+    """specifies the type of score returned by the test"""
+
+    description = ("Test the sheets' if the sheets' tuning curves Relative Unselective Response Amplitude are significantly different than a predifined distribution")
+
+    def __init__(self,
+                 observation,
+                 sheets,
+                 contrast,
+                 name ="Relative Unselective Response Amplitude Test"):
+        self.required_capabilities += (cap.SheetsRURA,)
+        SinusoidalGratingsTest.__init__(self, observation, sheets, contrast, name)
+
+    #----------------------------------------------------------------------
+
+    def validate_observation(self, observation):
+        if not (isinstance(observation, int) or isinstance(observation, float)):
+            try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
+                        assert (isinstance(val, int))
+                    else:
+                        assert (isinstance(val, int) or isinstance(val, float))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+
+    #----------------------------------------------------------------------
+
+    def generate_prediction(self, model):
+        prediction = model.sheets_rura(self.sheets, self.contrast)
         return prediction
 
     #----------------------------------------------------------------------

@@ -1,5 +1,6 @@
 from sciunit.scores.complete import *
 import scipy.stats as st
+import statsmodels.stats.power as pw
 import numpy
 
 class StudentsTestScore(Score):
@@ -34,15 +35,18 @@ class StudentsTestScore(Score):
 		else:
         		value, p_val = st.ttest_ind_from_stats(p_mean,p_std,p_n,o_mean,o_std,o_n,equal_var=True)
 	
+		power=pw.TTestIndPower().power(effect_size=CohenDScore.compute(observation,prediction).score,nobs1=p_n,ratio=float(o_n)/p_n,alpha=0.05)
 
 	#1 sample t-test
 	else:
-		value, p_val= st.ttest_ind_from_stats(p_mean, p_std, p_n, observation, std2=0, nobs2=2, equal_var=False)				
-	return StudentsTestScore(value,related_data={"p_value": p_val})
+		value, p_val= st.ttest_ind_from_stats(p_mean, p_std, p_n, observation, std2=0, nobs2=2, equal_var=False)	
+                power=pw.TTestIndPower().power(effect_size=CohenDScore.compute({"mean":observation,"std":0},prediction).score,nobs1=p_n,alpha=0.05)
+			
+	return StudentsTestScore(value,related_data={"p_value": p_val,"power": power})
 	
     def __str__(self):
-	if self.test.sheet:
-		return 't = %.2f, p=%.6f for sheet(s) %s' % (self.score, self.related_data["p_value"], self.test.sheet)
+	if self.test.sheets:
+		return 't = %.2f, p=%.6f, power=%.6f for sheet(s) %s' % (self.score, self.related_data["p_value"], self.related_data["power"],self.test.sheets)
         else:
 	        return 't = %.2f, p=%.6f' % (self.score, self.related_data["p_value"])
 
@@ -65,13 +69,19 @@ class ShapiroTestScore(Score):
 	        value, p_val = st.shapiro(prediction)
 	
 	elif observation== "lognormal":
-		prediction=[numpy.log(p) for p in prediction]
-		value, p_val = st.shapiro(prediction)
+		logPredictions=[]
+		for p in prediction:
+			if p:
+				logPrediction=numpy.log(p)
+			else:
+				logPrediction=numpy.log(0.000000001)
+			logPredictions.append(logPrediction)		
+		value, p_val = st.shapiro(logPredictions)
 	
         return ShapiroTestScore(value,related_data={"p_value": p_val})
 
     def __str__(self):
-        if self.test.sheet:
-		return 'W = %.2f, p=%.6f for sheet %s' % (self.score, self.related_data["p_value"],self.test.sheet)
+        if self.test.sheets:
+		return 'W = %.2f, p=%.6f for sheet(s) %s' % (self.score, self.related_data["p_value"],self.test.sheets)
 	else:
 		return 'W = %.2f, p=%.6f' % (self.score, self.related_data["p_value"])
