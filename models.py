@@ -251,7 +251,7 @@ class ModelV1Spont(sciunit.Model, StatsSheetsFiringRate, SheetsMembranePotential
 		return {"mean": mean_ICond, "std": std_ICond, "n": n}
 
 
-class ModelV1(ModelV1Spont, SheetsHWHH, SheetsRURA):
+class ModelV1(ModelV1Spont, SheetsHWHH, SheetsRURA, StatsSheetsRURA, StatsSheetsHWHH):
         """A model of spontaneous activity of V1."""
 
         def __init__(self, path, name="Spontaneous activity of V1"):
@@ -261,8 +261,33 @@ class ModelV1(ModelV1Spont, SheetsHWHH, SheetsRURA):
                 self.data_store_drift = param_filter_query(self.data_store,st_direct_stimulation_name=None,st_name="FullfieldDriftingSinusoidalGrating")
 
 
-
         def sheets_hwhh(self, sheets, contrast):
+                """Get the Half-Width at Half-Height of all neurons of the sheets
+                sheets should be a string specifying the name of the sheet
+                contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
+                A list of contrast can be used instead if the excluding of neurons for should be based on their values for more than
+                one contrast. e.g. when wanting to compare the results for 2 values of contrast. Only the first value of the list
+                will be used for the computation of the HWHH
+                """
+
+                if not isinstance(contrast,list):
+                        contrast=[contrast]
+                elif len(contrast) != 2:
+                        raise sciunit.errors.Error("Parameter contrast must be an integer or a list of 2 integers")
+
+                ids=param_filter_query(self.data_store,sheet_name=sheets).get_segments()[0].get_stored_spike_train_ids()
+
+                for c in contrast:
+                	base = queries.param_filter_query(self.data_store_drift,sheet_name=sheets,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=c,value_name='orientation baseline of Firing rate',ads_unique=True).get_analysis_result()[0].get_value_by_id(ids)
+                        mmax = queries.param_filter_query(self.data_store_drift,sheet_name=sheets,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=c,value_name='orientation max of Firing rate',ads_unique=True).get_analysis_result()[0].get_value_by_id(ids)
+                        ids = numpy.array(ids)[numpy.array(base)+numpy.array(mmax) > 1.0]
+                        errors = queries.param_filter_query(self.data_store_drift,value_name=['orientation fitting error of Firing rate'],sheet_name=sheets,st_contrast=c, ads_unique=True).get_analysis_result()[0]
+                        ids=numpy.array(ids)[numpy.array(errors.get_value_by_id(ids))<0.3]
+
+                return param_filter_query(self.data_store_drift,sheet_name=sheets,st_contrast=contrast[0],value_name='orientation HWHH of Firing rate',ads_unique=True).get_analysis_result()[0].get_value_by_id(ids)
+
+
+        def stats_sheets_hwhh(self, sheets, contrast):
         	"""Get the mean and standard error of Half-Width at Half-Height of all neurons of the sheets
             	sheets should be a string specifying the name of the sheet
             	contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
@@ -275,22 +300,9 @@ class ModelV1(ModelV1Spont, SheetsHWHH, SheetsRURA):
                 mean=[]
                 std=[]
 																															
-		if not isinstance(contrast,list):
-                        contrast=[contrast]
-	        elif len(contrast) != 2:
-			raise sciunit.errors.Error("Parameter contrast must be an integer or a list of 2 integers")
-
                 if type(sheets)== str:
-                        ids=param_filter_query(self.data_store,sheet_name=sheets).get_segments()[0].get_stored_spike_train_ids()
-
-		        for c in contrast:
-                        	base = queries.param_filter_query(self.data_store_drift,sheet_name=sheets,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=c,value_name='orientation baseline of Firing rate',ads_unique=True).get_analysis_result()[0].get_value_by_id(ids)
-                        	mmax = queries.param_filter_query(self.data_store_drift,sheet_name=sheets,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=c,value_name='orientation max of Firing rate',ads_unique=True).get_analysis_result()[0].get_value_by_id(ids)
-                        	ids = numpy.array(ids)[numpy.array(base)+numpy.array(mmax) > 1.0]
-                        	errors = queries.param_filter_query(self.data_store_drift,value_name=['orientation fitting error of Firing rate'],sheet_name=sheets,st_contrast=c, ads_unique=True).get_analysis_result()[0]
-                        	ids=numpy.array(ids)[numpy.array(errors.get_value_by_id(ids))<0.3]
                                 
-                        HWHH=param_filter_query(self.data_store_drift,sheet_name=sheets,st_contrast=contrast[0],value_name='orientation HWHH of Firing rate',ads_unique=True).get_analysis_result()[0].get_value_by_id(ids)
+                        HWHH=self.sheets_hwhh(sheets,contrast)
 
                         mean_HWHH, std_HWHH = ms(HWHH)
                         n=len(HWHH)
@@ -307,36 +319,52 @@ class ModelV1(ModelV1Spont, SheetsHWHH, SheetsRURA):
                                 except Exception:
                                         raise sciunit.errors.Error("Parameter sheets must be a string or a list of string")
 
-	                        ids=param_filter_query(self.data_store,sheet_name=s).get_segments()[0].get_stored_spike_train_ids()
-				
-	                        for c in contrast:
-	                                base = queries.param_filter_query(self.data_store_drift,sheet_name=s,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=c,value_name='orientation baseline of Firing rate',ads_unique=True).get_analysis_result()[0].get_value_by_id(ids)
-	                                mmax = queries.param_filter_query(self.data_store_drift,sheet_name=s,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=c,value_name='orientation max of Firing rate',ads_unique=True).get_analysis_result()[0].get_value_by_id(ids)
-        	                        ids = numpy.array(ids)[numpy.array(base)+numpy.array(mmax) > 1.0]
-                	                errors = queries.param_filter_query(self.data_store_drift,value_name=['orientation fitting error of Firing rate'],sheet_name=s,st_contrast=c, ads_unique=True).get_analysis_result()[0]
-                        	        ids=numpy.array(ids)[numpy.array(errors.get_value_by_id(ids))<0.3]
-
-				HWHH=param_filter_query(self.data_store_drift,sheet_name=s,st_contrast=contrast,value_name='orientation HWHH of Firing rate',ads_unique=True).get_analysis_result()[0].get_value_by_id(ids)
+                        	HWHH=self.sheets_hwhh(s,contrast)
                                 population.append(len(HWHH))
                                 mean.append(numpy.mean(HWHH))
                                 std.append(numpy.std(HWHH, ddof=1))
                         mean_HWHH=numpy.average(mean,weights=population)
                         std_HWHH=(sum([(p-1)*st**2 for (st,p) in zip(std,population)])/(sum(population)-len(population)))**0.5
                         n=sum(population)
-                print(contrast)
-                print(mean_HWHH)
-                print(std_HWHH)
-                print(n)
 
                 return {"mean": mean_HWHH, "std": std_HWHH, "n": n}
 
 
-        def sheets_rura(self, sheets, contrast):
+	def sheets_rura(self, sheets, contrast):
+                """Get the Relative Unselective Response Amplitude of all neurons of the sheets
+                sheets should be a string specifying the name of the sheet
+                contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
+                A list of contrast can be used instead if the excluding of neurons for should be based on their values for more than                 one contrast. e.g. when wanting to compare the results for 2 values of contrast. Only the first value of the list
+                will be used for the computation of the RURA
+                """
+
+
+                if not isinstance(contrast,list):
+                        contrast=[contrast]
+                elif len(contrast) != 2:
+                        raise sciunit.errors.Error("Parameter contrast must be an integer or a list of 2 integers")
+		
+		ids=param_filter_query(self.data_store,sheet_name=sheets).get_segments()[0].get_stored_spike_train_ids()
+                for i in range(len(contrast)):
+                	b = queries.param_filter_query(self.data_store_drift,sheet_name=sheets,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=contrast[i],value_name='orientation baseline of Firing rate',ads_unique=True).get_analysis_result()[0]
+                        if i ==0:
+                                base=b
+                        m = queries.param_filter_query(self.data_store_drift,sheet_name=sheets,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=contrast[i],value_name='orientation max of Firing rate',ads_unique=True).get_analysis_result()[0]
+                        if i ==0:
+                                mmax=m
+                        ids = numpy.array(ids)[numpy.array(b.get_value_by_id(ids))+numpy.array(m.get_value_by_id(ids)) > 1.0]
+                        errors = queries.param_filter_query(self.data_store_drift,value_name=['orientation fitting error of Firing rate'],sheet_name=sheets,st_contrast=contrast[i], ads_unique=True).get_analysis_result()[0]
+                        ids=numpy.array(ids)[numpy.array(errors.get_value_by_id(ids))<0.3]
+
+                return [100*base.get_value_by_id(i)/(mmax.get_value_by_id(i) + base.get_value_by_id(i)) for i in ids]
+
+
+        def stats_sheets_rura(self, sheets, contrast):
                 """Get the mean and standard error of Relative Unselective Response Amplitude of all neurons of the sheets
                 sheets should be a string specifying the name of the sheet
                 contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
                 A list of contrast can be used instead if the excluding of neurons for should be based on their values for more than                 one contrast. e.g. when wanting to compare the results for 2 values of contrast. Only the first value of the list 
-                will be used for the computation of the HWHH  
+                will be used for the computation of the RURA  
 		"""
 
                 ms = lambda a: (numpy.mean(a),numpy.std(a,ddof=1))
@@ -345,26 +373,9 @@ class ModelV1(ModelV1Spont, SheetsHWHH, SheetsRURA):
                 std=[]
 
 
-                if not isinstance(contrast,list):
-                        contrast=[contrast]
-                elif len(contrast) != 2:
-                        raise sciunit.errors.Error("Parameter contrast must be an integer or a list of 2 integers")
-
                 if type(sheets)== str:
-                        ids=param_filter_query(self.data_store,sheet_name=sheets).get_segments()[0].get_stored_spike_train_ids()
-
-                        for i in range(len(contrast)):
-				b = queries.param_filter_query(self.data_store_drift,sheet_name=sheets,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=contrast[i],value_name='orientation baseline of Firing rate',ads_unique=True).get_analysis_result()[0]
-                                if i ==0:
-					base=b	
-                                m = queries.param_filter_query(self.data_store_drift,sheet_name=sheets,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=contrast[i],value_name='orientation max of Firing rate',ads_unique=True).get_analysis_result()[0]
-				if i ==0:
-                                        mmax=m
-                                ids = numpy.array(ids)[numpy.array(b.get_value_by_id(ids))+numpy.array(m.get_value_by_id(ids)) > 1.0]
-                                errors = queries.param_filter_query(self.data_store_drift,value_name=['orientation fitting error of Firing rate'],sheet_name=sheets,st_contrast=contrast[i], ads_unique=True).get_analysis_result()[0]
-                                ids=numpy.array(ids)[numpy.array(errors.get_value_by_id(ids))<0.3]
 			
-			RURA=[100*base.get_value_by_id(i)/(mmax.get_value_by_id(i) + base.get_value_by_id(i)) for i in ids]
+			RURA=self.sheets_rura(sheets,contrast)
 			
                         mean_RURA, std_RURA = ms(RURA)
                         n=len(RURA)
@@ -381,31 +392,13 @@ class ModelV1(ModelV1Spont, SheetsHWHH, SheetsRURA):
                                 except Exception:
                                         raise sciunit.errors.Error("Parameter sheets must be a string or a list of string")
 
-                                ids=param_filter_query(self.data_store,sheet_name=s).get_segments()[0].get_stored_spike_train_ids()
-
-
-	                        for i in range(len(contrast)):
-        	                        b = queries.param_filter_query(self.data_store_drift,sheet_name=s,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=contrast[i],value_name='orientation baseline of Firing rate',ads_unique=True).get_analysis_result()[0]
-                	                if i ==0:
-                        	                base=b
-                                	m = queries.param_filter_query(self.data_store_drift,sheet_name=s,st_name='FullfieldDriftingSinusoidalGrating',st_contrast=contrast[i],value_name='orientation max of Firing rate',ads_unique=True).get_analysis_result()[0]
-                                	if i ==0:
-                                	        mmax=m
-                                	ids = numpy.array(ids)[numpy.array(b.get_value_by_id(ids))+numpy.array(m.get_value_by_id(ids)) > 1.0]
-                                	errors = queries.param_filter_query(self.data_store_drift,value_name=['orientation fitting error of Firing rate'],sheet_name=s,st_contrast=contrast[i], ads_unique=True).get_analysis_result()[0]
-                                	ids=numpy.array(ids)[numpy.array(errors.get_value_by_id(ids))<0.3]
-
-                        	RURA=[100*base.get_value_by_id(i)/(mmax.get_value_by_id(i) + base.get_value_by_id(i)) for i in ids]
+                        	RURA=self.sheets_rura(s,contrast)
                                 population.append(len(RURA))
                                 mean.append(numpy.mean(RURA))
                                 std.append(numpy.std(RURA, ddof=1))
                         mean_RURA=numpy.average(mean,weights=population)
                         std_RURA=(sum([(p-1)*st**2 for (st,p) in zip(std,population)])/(sum(population)-len(population)))**0.5
                         n=sum(population)
-		print(contrast)
-		print(mean_RURA)
-		print(std_RURA)
-		print(n)
                 return {"mean": mean_RURA, "std": std_RURA, "n": n}
 
 

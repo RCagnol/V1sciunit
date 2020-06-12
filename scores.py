@@ -6,7 +6,7 @@ import numpy
 class StudentsTestScore(Score):
     """A Student's t-test score.
 
-    A float indicating the difference between two means normalized by the two standard deviations and the two sample sizes
+    A float indicating the difference between two means of two independent samples normalized by their standard deviations and the two sample sizes
     Contains also the p value, which evaluates the significativity of this difference
     """
 
@@ -27,29 +27,49 @@ class StudentsTestScore(Score):
         	o_std = observation['std']
         	o_n = observation['n']
 		o_var=o_std**2 
-       
-
-		#If the 2 variances are too different, perform a Welsh t-test 	
+     
+		#If the 2 variances are too different, perform a Welch t-test 	
 		if p_var/o_var > 2 or o_var/p_var > 2: 
 			value, p_val = st.ttest_ind_from_stats(p_mean,p_std,p_n,o_mean,o_std,o_n,equal_var=False)
 		else:
-        		value, p_val = st.ttest_ind_from_stats(p_mean,p_std,p_n,o_mean,o_std,o_n,equal_var=True)
-	
+	        	value, p_val = st.ttest_ind_from_stats(p_mean,p_std,p_n,o_mean,o_std,o_n,equal_var=True)
 		power=pw.TTestIndPower().power(effect_size=CohenDScore.compute(observation,prediction).score,nobs1=p_n,ratio=float(o_n)/p_n,alpha=0.05)
 
 	#1 sample t-test
 	else:
 		value, p_val= st.ttest_ind_from_stats(p_mean, p_std, p_n, observation, std2=0, nobs2=2, equal_var=False)	
-                power=pw.TTestIndPower().power(effect_size=CohenDScore.compute({"mean":observation,"std":0},prediction).score,nobs1=p_n,alpha=0.05)
-			
-	return StudentsTestScore(value,related_data={"p_value": p_val,"power": power})
+                power=pw.TTestPower().power(effect_size=CohenDScore.compute({"mean":observation,"std":0},prediction).score,nobs=p_n,alpha=0.05)
+		o_mean=observation		
+	return StudentsTestScore(value,related_data={"p_value": p_val,"power": power,"diffmean":p_mean-o_mean})
 	
     def __str__(self):
 	if self.test.sheets:
-		return 't = %.2f, p=%.6f, power=%.6f for sheet(s) %s' % (self.score, self.related_data["p_value"], self.related_data["power"],self.test.sheets)
+		return 't = %.2f, p=%.6f, power=%.6f, difference of mean=%.2f for sheet(s) %s' % (self.score, self.related_data["p_value"], self.related_data["power"], self.related_data["diffmean"],self.test.sheets)
         else:
 	        return 't = %.2f, p=%.6f' % (self.score, self.related_data["p_value"])
 
+class StudentsPairedTestScore(Score):
+    """A Student's paired t-test score.
+    A float indicating the difference between two means of two dependent samples normalized by the two standard deviations and the two sample sizes
+    Contains also the p value, which evaluates the significativity of this difference
+    """
+
+    _description = ("The t statistic between the prediction and the observation")
+
+    @classmethod
+    def compute(cls, observation, prediction):
+        """Compute a t statistic and a p_value from an observation and a prediction."""
+
+        value, p_val = st.ttest_rel(prediction,observation)
+        power=pw.TTestPower().power(effect_size=value/len(observation)**0.5,nobs=len(observation),alpha=0.05)
+	diffmean=numpy.mean(prediction)-numpy.mean(observation)
+        return StudentsPairedTestScore(value,related_data={"p_value": p_val,"power": power,"diffmean":diffmean})
+
+    def __str__(self):
+        if self.test.sheets:
+                return 't = %.2f, p=%.6f, power=%.6f, difference of mean=%.2f for sheet(s) %s' % (self.score, self.related_data["p_value"], self.related_data["power"], self.related_data["diffmean"],self.test.sheets)
+        else:
+                return 't = %.2f, p=%.6f' % (self.score, self.related_data["p_value"])
 
 
 class ShapiroTestScore(Score):

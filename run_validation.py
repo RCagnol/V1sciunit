@@ -12,21 +12,22 @@ newTest=RURA({"mean": 18.1, "std": 25.7, "n": 19},["V1_Inh_L4","V1_Inh_L2/3"],10
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=RURA(newModel.sheets_rura("V1_Exc_L4",[30,100]),"V1_Exc_L4",[100,30])
+newTest=RURAContrastComparison(newModel.sheets_rura("V1_Exc_L4",[30,100]),"V1_Exc_L4",[100,30])
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=RURA(newModel.sheets_rura("V1_Inh_L4",[30,100]),"V1_Inh_L4",[100,30])
+newTest=RURAContrastComparison(newModel.sheets_rura("V1_Inh_L4",[30,100]),"V1_Inh_L4",[100,30])
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=RURA(newModel.sheets_rura("V1_Exc_L2/3",[30,100]),"V1_Exc_L2/3",[100,30])
+newTest=RURAContrastComparison(newModel.sheets_rura("V1_Exc_L2/3",[30,100]),"V1_Exc_L2/3",[100,30])
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=RURA(newModel.sheets_rura("V1_Inh_L2/3",[30,100]),"V1_Inh_L2/3",[100,30])
+newTest=RURAContrastComparison(newModel.sheets_rura("V1_Inh_L2/3",[30,100]),"V1_Inh_L2/3",[100,30])
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
+
 newTest=HWHH({"mean": 23.4, "std": 9.2, "n": 58},["V1_Exc_L4","V1_Exc_L2/3"],100)
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
@@ -35,19 +36,19 @@ newTest=HWHH({"mean": 31.9, "std": 11.3, "n": 19},["V1_Inh_L4","V1_Inh_L2/3"],10
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=HWHH(newModel.sheets_hwhh("V1_Exc_L4",[30,100]),"V1_Exc_L4",[100,30])
+newTest=HWHHContrastComparison(newModel.sheets_hwhh("V1_Exc_L4",[30,100]),"V1_Exc_L4",[100,30])
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=HWHH(newModel.sheets_hwhh("V1_Inh_L4",[30,100]),"V1_Inh_L4",[100,30])
+newTest=HWHHContrastComparison(newModel.sheets_hwhh("V1_Inh_L4",[30,100]),"V1_Inh_L4",[100,30])
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=HWHH(newModel.sheets_hwhh("V1_Exc_L2/3",[30,100]),"V1_Exc_L2/3",[100,30])
+newTest=HWHHContrastComparison(newModel.sheets_hwhh("V1_Exc_L2/3",[30,100]),"V1_Exc_L2/3",[100,30])
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=HWHH(newModel.sheets_hwhh("V1_Inh_L2/3",[30,100]),"V1_Inh_L2/3",[100,30])
+newTest=HWHHContrastComparison(newModel.sheets_hwhh("V1_Inh_L2/3",[30,100]),"V1_Inh_L2/3",[100,30])
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 

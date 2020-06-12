@@ -420,7 +420,7 @@ class HWHH(SinusoidalGratingsTest):
                  sheets,
 		 contrast,
                  name ="Half-Width at Half-Height Test"):
-        self.required_capabilities += (cap.SheetsHWHH,)
+        self.required_capabilities += (cap.StatsSheetsHWHH,)
         SinusoidalGratingsTest.__init__(self, observation, sheets, contrast, name)
 
     #----------------------------------------------------------------------
@@ -443,7 +443,7 @@ class HWHH(SinusoidalGratingsTest):
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction = model.sheets_hwhh(self.sheets, self.contrast)
+        prediction = model.stats_sheets_hwhh(self.sheets, self.contrast)
         return prediction
 
     #----------------------------------------------------------------------
@@ -452,6 +452,44 @@ class HWHH(SinusoidalGratingsTest):
         observation["std"] = observation["std"]*(float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance
         score = scores.StudentsTestScore.compute(observation, prediction)
         return score
+
+class HWHHContrastComparison(SinusoidalGratingsTest):
+    """Test if the sheets' Half-Width at Half-Height values at a certain contrast are significantly different than the values 
+	observed with another contrast"""
+
+    score_type = scores.StudentsPairedTestScore
+    """specifies the type of score returned by the test"""
+
+    description = ("Test the sheets' if the sheets' Half-Width at Half-Height values at a certain contrast are significantly different than the values observed with another contrast")
+
+    def __init__(self,
+                 observation,
+                 sheets,
+                 contrast,
+                 name ="Half-Width at Half-Height Contrast Comparison Test"):
+        self.required_capabilities += (cap.SheetsHWHH,)
+        SinusoidalGratingsTest.__init__(self, observation, sheets, contrast, name)
+
+    #----------------------------------------------------------------------
+
+    def validate_observation(self, observation):
+        if not (isinstance(observation, list)):
+   		raise sciunit.errors.ObservationError(
+                    ("Observation must return a list of values"))
+
+    #----------------------------------------------------------------------
+
+    def generate_prediction(self, model):
+        prediction = model.sheets_hwhh(self.sheets, self.contrast)
+        return prediction
+
+    #----------------------------------------------------------------------
+
+    def compute_score(self, observation, prediction):
+        score = scores.StudentsPairedTestScore.compute(observation, prediction)
+        return score
+
+
 
 
 class RURA(SinusoidalGratingsTest):
@@ -467,7 +505,7 @@ class RURA(SinusoidalGratingsTest):
                  sheets,
                  contrast,
                  name ="Relative Unselective Response Amplitude Test"):
-        self.required_capabilities += (cap.SheetsRURA,)
+        self.required_capabilities += (cap.StatsSheetsRURA,)
         SinusoidalGratingsTest.__init__(self, observation, sheets, contrast, name)
 
     #----------------------------------------------------------------------
@@ -490,7 +528,7 @@ class RURA(SinusoidalGratingsTest):
     #----------------------------------------------------------------------
 
     def generate_prediction(self, model):
-        prediction = model.sheets_rura(self.sheets, self.contrast)
+        prediction = model.stats_sheets_rura(self.sheets, self.contrast)
         return prediction
 
     #----------------------------------------------------------------------
@@ -500,3 +538,40 @@ class RURA(SinusoidalGratingsTest):
         score = scores.StudentsTestScore.compute(observation, prediction)
         return score
 
+
+
+class RURAContrastComparison(SinusoidalGratingsTest):
+    """Test if the sheets' Relative Unselective Response Amplitude values at a certain contrast are significantly different than the 
+	values observed with another contrast"""
+
+    score_type = scores.StudentsPairedTestScore
+    """specifies the type of score returned by the test"""
+
+    description = ("Test if the sheets' Relative Unselective Response Amplitude values at a certain contrast are significantly different than the values observed with another contrast")
+
+    def __init__(self,
+                 observation,
+                 sheets,
+                 contrast,
+                 name ="Relative Unselective Response Amplitude Contrast Comparison Test"):
+        self.required_capabilities += (cap.SheetsRURA,)
+        SinusoidalGratingsTest.__init__(self, observation, sheets, contrast, name)
+
+    #----------------------------------------------------------------------
+
+    def validate_observation(self, observation):
+        if not (isinstance(observation, list)):
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a list of values"))
+
+    #----------------------------------------------------------------------
+
+    def generate_prediction(self, model):
+        prediction = model.sheets_rura(self.sheets, self.contrast)
+        return prediction
+
+    #----------------------------------------------------------------------
+
+    def compute_score(self, observation, prediction):
+        score = scores.StudentsPairedTestScore.compute(observation, prediction)
+        return score

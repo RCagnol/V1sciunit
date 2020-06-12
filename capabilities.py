@@ -75,10 +75,21 @@ class SheetsCorrelationCoefficient(sciunit.Capability):
 
 
 class SheetsHWHH(sciunit.Capability):
-    """Get the mean and standard error of Half-Width at Half-Height of all neurons of the sheets"""
+    """Get the list of Half-Width at Half-Height of all neurons of the sheet"""
 
     def sheets_hwhh(self, sheets, contrast):
-        """ Model should implement this method such as to retrieve the Half-Width at Half-Height 
+        """ Model should implement this method such as to retrieve the Half-Width at Half-Height
+            of its sheets of neurons passed in input
+            sheets should be a string specifying the name of the sheet
+            contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
+        """
+        raise NotImplementedError()
+
+class StatsSheetsHWHH(sciunit.Capability):
+    """Get the mean and standard deviation of Half-Width at Half-Height of all neurons of the sheets"""
+
+    def stats_sheets_hwhh(self, sheets, contrast):
+        """ Model should implement this method such as to retrieve the mean and standard deviation of the Half-Width at Half-Height 
             of its sheets of neurons passed in input
             sheets should be a string specifying the name of the sheet
 	    contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
@@ -91,6 +102,17 @@ class SheetsRURA(sciunit.Capability):
     def sheets_rura(self, sheets, contrast):
         """ Model should implement this method such as to retrieve the Half-Width at Half-Height
             of its sheets of neurons passed in input
+            sheets should be a string specifying the name of the sheet
+            contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
+        """
+        raise NotImplementedError()
+
+class StatsSheetsRURA(sciunit.Capability):
+    """Get the mean and standard deviation of the Relative Unselective Response amplitude  of all neurons of the sheets"""
+
+    def stats_sheets_rura(self, sheets, contrast):
+        """ Model should implement this method such as to retrieve the mean and the standard deviation of the Relative Unselective
+	    Response Amplitude of its sheets of neurons passed in input
             sheets should be a string specifying the name of the sheet
             contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
         """
