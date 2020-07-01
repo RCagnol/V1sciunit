@@ -1,6 +1,7 @@
 import sciunit
 import capabilities as cap
-import scores 
+import scores
+import numpy as np 
 #===============================================================================
 
 
@@ -294,7 +295,7 @@ class RestingPotential(Test):
     #----------------------------------------------------------------------
 
     def compute_score(self, observation, prediction):
-        observation["std"] = observation["std"]*(float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance	
+        observation["std"] = observation["std"] * (float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance	
 	score = scores.StudentsTestScore.compute(observation, prediction)
         return score
 
@@ -575,3 +576,51 @@ class RURAContrastComparison(SinusoidalGratingsTest):
     def compute_score(self, observation, prediction):
         score = scores.StudentsPairedTestScore.compute(observation, prediction)
         return score
+
+
+class ModulationRatio(SinusoidalGratingsTest):
+    """Test if the sheets' modulation ratios are significantly different than a predifined distribution"""
+
+    score_type = scores.StudentsTestScore
+    """specifies the type of score returned by the test"""
+
+    description = ("Test if the sheets' modulation ratios are significantly different than a predifined distribution")
+
+    def __init__(self,
+                 observation,
+                 sheets,
+                 contrast,
+                 name ="Modulation Ratio test"):
+        self.required_capabilities += (cap.StatsSheetsModulationRatio,)
+        SinusoidalGratingsTest.__init__(self, observation, sheets, contrast, name)
+
+    #----------------------------------------------------------------------
+
+    def validate_observation(self, observation):
+        if not (isinstance(observation, int) or isinstance(observation, float)):
+            try:
+                assert len(observation.keys()) == 3
+                for key, val in observation.items():
+                    assert key in ["mean", "std","n"]
+                    if key =="n":
+                        assert (isinstance(val, int))
+                    else:
+                        assert (isinstance(val, int) or isinstance(val, float))
+            except Exception:
+                raise sciunit.errors.ObservationError(
+                    ("Observation must return a integer, a float, or a dictionary of the form:"
+                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
+
+    #----------------------------------------------------------------------
+
+    def generate_prediction(self, model):
+        prediction = model.stats_modulation_ratio(self.sheets, self.contrast)
+        return prediction
+
+    #----------------------------------------------------------------------
+
+    def compute_score(self, observation, prediction):
+        observation["std"] = observation["std"]*(float(observation["n"])/(observation["n"]-1))**0.5 #Bessel's correction for unbiased variance
+        score = scores.StudentsTestScore.compute(observation, prediction)
+        return score
+

@@ -59,7 +59,6 @@ score.summarize()
 newTest=InhibitoryAverageFiringRate(newModel.stats_sheets_firing_rate("V1_Exc_L4"),"V1_Inh_L4")
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
-
 newTest=ExcitatoryAverageFiringRate(2,"V1_Exc_L2/3")
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
@@ -108,7 +107,7 @@ newTest=CorrelationCoefficient(newModel.sheets_correlation_coefficient("V1_Exc_L
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=RestingPotential({"mean": -72.8, "std": 5, "n": 119},["V1_Exc_L4", "V1_Inh_L4", "V1_Exc_L2/3", "V1_Inh_L2/3"])
+newTest=RestingPotential({"mean": -72.3, "std": 5, "n": 217},["V1_Exc_L4", "V1_Inh_L4", "V1_Exc_L2/3", "V1_Inh_L2/3"])
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 

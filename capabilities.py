@@ -108,11 +108,21 @@ class SheetsRURA(sciunit.Capability):
         raise NotImplementedError()
 
 class StatsSheetsRURA(sciunit.Capability):
-    """Get the mean and standard deviation of the Relative Unselective Response amplitude  of all neurons of the sheets"""
+    """Get the mean and standard deviation of the Relative Unselective Response amplitude of all neurons of the sheets"""
 
     def stats_sheets_rura(self, sheets, contrast):
         """ Model should implement this method such as to retrieve the mean and the standard deviation of the Relative Unselective
 	    Response Amplitude of its sheets of neurons passed in input
+            sheets should be a string specifying the name of the sheet
+        """
+        raise NotImplementedError()
+
+class SheetsModulationRatio(sciunit.Capability):
+    """Get the mean and standard deviation of the modulation ratio of all neurons of the sheets"""
+
+    def stats_modulation_ratio(self, sheets, contrast):
+        """ Model should implement this method such as to retrieve the mean and the standard deviation of the modulation ratio
+	 of its sheets of neurons passed in input
             sheets should be a string specifying the name of the sheet
             contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
         """
