@@ -54,7 +54,7 @@ class SheetsInhibitorySynapticConductance(sciunit.Capability):
 
 
 class SheetsCVISI(sciunit.Capability):
-    """Get the mean coefficient of variation of the inter-spike-interval of all neurons of the sheets"""
+    """Get the average coefficient of variation of the inter-spike-interval of all neurons of the sheets"""
 
     def sheets_cv_isi(self, sheets):
         """ Model should implement this method such as to retrieve the coefficient of variation of the inter-spike-interval 
@@ -64,7 +64,7 @@ class SheetsCVISI(sciunit.Capability):
 
 
 class SheetsCorrelationCoefficient(sciunit.Capability):
-    """Get the correlation coefficient between the PSTH of all pair of neurons of the sheets"""
+    """Get the average correlation coefficient between the PSTH of all pair of neurons of the sheets"""
 
     def sheets_correlation_coefficient(self, sheets):
 	""" Model should implement this method such as to retrieve the correlation coefficient
@@ -97,11 +97,11 @@ class StatsSheetsHWHH(sciunit.Capability):
         raise NotImplementedError()
 
 class SheetsRURA(sciunit.Capability):
-    """Get the mean and standard error of Half-Width at Half-Height of all neurons of the sheets"""
+    """Get Relative Unselective Response amplitude of all neurons of the sheets"""
 
     def sheets_rura(self, sheets, contrast):
-        """ Model should implement this method such as to retrieve the Half-Width at Half-Height
-            of its sheets of neurons passed in input
+        """ Model should implement this method such as to retrieve the Relative Unselective Response amplitude of all neurons 
+            of its sheets passed in input
             sheets should be a string specifying the name of the sheet
             contrast should be an integer or a float specifying the contrast of the sinusoidal grating stimulus
         """

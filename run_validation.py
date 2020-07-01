@@ -52,18 +52,19 @@ newTest=HWHHContrastComparison(newModel.sheets_hwhh("V1_Inh_L2/3",[30,100]),"V1_
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=ExcitatoryAverageFiringRate(2,"V1_Exc_L4")
+newTest=AverageFiringRate(2,"V1_Exc_L4")
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=InhibitoryAverageFiringRate(newModel.stats_sheets_firing_rate("V1_Exc_L4"),"V1_Inh_L4")
-score= newTest.judge(newModel, deep_error=True)
-score.summarize()
-newTest=ExcitatoryAverageFiringRate(2,"V1_Exc_L2/3")
+newTest=AverageFiringRate(newModel.stats_sheets_firing_rate("V1_Exc_L4"),"V1_Inh_L4")
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 
-newTest=InhibitoryAverageFiringRate(newModel.stats_sheets_firing_rate("V1_Exc_L2/3"),"V1_Inh_L2/3")
+newTest=AverageFiringRate(2,"V1_Exc_L2/3")
+score= newTest.judge(newModel, deep_error=True)
+score.summarize()
+
+newTest=AverageFiringRate(newModel.stats_sheets_firing_rate("V1_Exc_L2/3"),"V1_Inh_L2/3")
 score= newTest.judge(newModel, deep_error=True)
 score.summarize()
 

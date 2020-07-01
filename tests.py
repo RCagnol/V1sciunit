@@ -12,24 +12,25 @@ class Test(sciunit.Test):
     def __init__(self,
                  observation = None,
                  sheets = None,
-                 name = "Excitatory Average Firing Rate Test"):
+                 name = "Test"):
 
         self.sheets=sheets
         sciunit.Test.__init__(self, observation, name)
 
 
-class ExcitatoryAverageFiringRate(Test):
-    """Test the if the distribution of the sheets average firing rates is significatively lesser than a predefined value"""
+class AverageFiringRate(Test):
+    """Test the if the distribution of the sheets average firing rates is significatively different than a predefined value
+    or distribution"""
 
     score_type = scores.StudentsTestScore
     """specifies the type of score returned by the test"""
 
-    description = "Test if the sheets average firing rate is lesser than a predifined value"
+    description = "Test if the sheets average firing rate is different than a predifined value or distribution"
 
     def __init__(self,
                  observation = None,
 		 sheets = None,
-                 name = "Excitatory Average Firing Rate Test"):
+                 name = "Average Firing Rate Test"):
 	
 	self.required_capabilities += (cap.StatsSheetsFiringRate,)
         Test.__init__(self,observation, sheets, name)
@@ -63,54 +64,6 @@ class ExcitatoryAverageFiringRate(Test):
     def compute_score(self, observation, prediction):
 	score = scores.StudentsTestScore.compute(observation, prediction)
      	return score
-
-
-
-class InhibitoryAverageFiringRate(Test):
-    """Test the if the sheets average firing rates is significantly greater than the average firing rates 
-	of a predefined distribution"""
-
-    score_type = scores.StudentsTestScore
-    """specifies the type of score returned by the test"""
-
-    description = "Test if the sheets average firing rate is greater than a predefined value"
-
-    def __init__(self,
-                 observation = None,
-		 sheets = None,
-                 name = "Inhibitory Average Firing Rate Test"):
-
-        self.required_capabilities += (cap.StatsSheetsFiringRate,)
-        Test.__init__(self, observation, sheets, name)
-
-    #----------------------------------------------------------------------
-
-    def validate_observation(self, observation):
-        if not (isinstance(observation, int) or isinstance(observation, float)):
-            try:
-                assert len(observation.keys()) == 3
-                for key, val in observation.items():
-                    assert key in ["mean", "std","n"]
-                    if key =="n":
-                        assert (isinstance(val, int))
-                    else:
-                        assert (isinstance(val, int) or isinstance(val, float))
-            except Exception:
-                raise sciunit.errors.ObservationError(
-                    ("Observation must return a integer, a float, or a dictionary of the form:"
-                     "{'mean': NUM1, 'std': NUM2, 'n' : NUM3}"))
-    #----------------------------------------------------------------------
-
-    def generate_prediction(self, model):
-        prediction=model.stats_sheets_firing_rate(self.sheets)
-	if type(prediction).__module__=="numpy":
-        	prediction=prediction.item()
-        return prediction
-
-    #----------------------------------------------------------------------
-    def compute_score(self, observation, prediction):
-        score = scores.StudentsTestScore.compute(observation, prediction)
-	return score
 
 
 class DistributionAverageFiringRate(Test):
